@@ -1,7 +1,11 @@
 import customtkinter
 
+
 # Classe principale de la calculatrice héritant de customtkinter.CTk
 class Calculator(customtkinter.CTk):
+
+    expression = ""
+
     def __init__(self):
         super().__init__()
 
@@ -22,11 +26,11 @@ class Calculator(customtkinter.CTk):
         self.frame_resultat.grid_columnconfigure((0,1), weight=1)
         self.frame_resultat.grid_rowconfigure(0, weight=1)
 
-        # Zone de texte pour afficher le résultat
-        self.result_box = customtkinter.CTkTextbox(self.frame_resultat, height=60, width=220)
-        self.result_box.configure(state="disabled")  # Désactiver la zone de texte pour l'édition
-        self.result_box.grid(row=0, column=0,padx=5, pady=5, sticky="w")
-
+        # Entry (affichage)
+        self.entry_var = customtkinter.StringVar()
+        self.entry = customtkinter.CTkEntry(self.frame_resultat, textvariable=self.entry_var, width=220, height=60, font=("Arial", 14), justify='right')
+        self.entry.grid(row=0, column=0, padx=5, pady=5)
+        
         # Bouton pour effacer le résultat
         self.button = customtkinter.CTkButton(self.frame_resultat, text="C", fg_color= "#be4d25", width=60, height=60, command=lambda: self.button_callback("C"))
         self.button.grid(row=0, column=1, padx=5,pady=5, sticky="e")
@@ -68,15 +72,58 @@ class Calculator(customtkinter.CTk):
 
     # Méthode de rappel pour les actions des boutons
     def button_callback(self, valeur):
+        current_text = self.entry_var.get()
+        
         if valeur == '=':
-            self.button_callback_egal()
+            self.calculate_expression(current_text)
+        elif valeur == 'DEL':
+            self.delete_last_character(current_text)
+        elif valeur == "C":
+            self.clear_expression()
+        elif valeur == "x²":
+            self.square_expression(current_text)
         else:
-            print(f"button pressed {valeur}")
+            self.append_to_expression(valeur, current_text)
 
-    # Méthode de rappel pour le bouton égal
-    def button_callback_egal(self):
-        print("button égal pressed")
+    def calculate_expression(self, expression):
+        if expression:
+            self.expression = expression
+            self.calculer()
 
+    def delete_last_character(self, expression):
+        if expression and expression != 'Syntaxe erreur':
+            self.entry_var.set(expression[:-1])
+            self.expression = self.entry_var.get()
+
+    def clear_expression(self):
+        self.expression = ""
+        self.entry_var.set(self.expression)
+
+    def square_expression(self, expression):
+        if expression:
+            try:
+                value = eval(expression)
+                self.entry_var.set(f"{value}*{value}")
+            except Exception as e:
+                self.entry_var.set("Syntaxe erreur")
+                print(e)
+
+    def append_to_expression(self, value, expression):
+        if self.entry_var.get() != 'Syntaxe erreur':
+            self.expression = expression + value
+            self.entry_var.set(self.expression)
+
+    def calculer(self):
+        self.expression = self.entry_var.get()
+        if self.expression:
+            try:
+                resultat = eval(self.expression)
+                self.entry_var.set(str(resultat))
+            except Exception as e:
+                self.entry_var.set("Syntaxe erreur")
+                print(e)
+
+            
 # Initialisation et démarrage de l'application
 app = Calculator()
 app.mainloop()
